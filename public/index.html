@@ -52,8 +52,13 @@
     	    }
     	    
     	    function roku_app_launch(id) {
-    	        var api_url = 'http://' + roku_ip_address + ":" + roku_port + "/launch/" + id;
-                $.get(api_url);
+                var api_url = 'http://localhost:8081/app';
+                $.ajax({
+                    url: api_url,
+                    type: 'get',
+                    data:{'url':'http://' + roku_ip_address + ':' + roku_port, 'id': id},
+                    dataType:"TEXT"
+                });
     	        $('#myModal').modal('hide')
     	    }
     	    
