@@ -1,0 +1,275 @@
+<html>
+    <head>
+    	<title>
+    		Roku JavaScript Remote
+    	</title>
+    	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+    	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    	<link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    	<script type="text/javascript">
+    	
+    	    roku_ip_address = '10.0.1.45';
+    	    roku_subnet = '10.0.1';
+    	    roku_port = '8060';
+	    roku_hotkeys_enabled = true;
+
+    	    function scan_for_roku() {
+    	    alert('start scan');
+    	        for (i = 1; i <= 16; i++) {
+    	            var roku_ip = roku_subnet + "." + i;
+    	            var api_url = 'http://'+roku_ip+":8060";
+    	            $.ajax({
+    	                type: "GET",
+    	                url: api_url,
+    	                error: function () {
+                            console.log(this.url + " not found.");
+                        },
+    	                success: function (data) {
+    	                    add_roku_ip(this.url, data);
+                        }
+                    });
+    	        }
+    	    }
+    	    
+    	    function add_roku_ip(ip, data) {
+    	        console.log(ip);
+    	        console.log(data);
+    	    }
+
+            function roku_play() {
+	        return roku_command('Play');
+ 	    }
+
+            function roku_backspace() {
+                $('#keyboard').val($('#keyboard').val().substring(0, $('#keyboard').val().length - 1));
+                return roku_command("Backspace");
+	    }
+
+            function roku_keyboard(key_event) {
+		var key = encodeURI(String.fromCharCode(key_event.which));
+                $('#keyboard').val('');
+		return roku_command("Lit_"+key);
+    	    }
+    	    
+    	    function roku_app_launch(id) {
+    	        var api_url = 'http://' + roku_ip_address + ":" + roku_port + "/launch/" + id;
+                $.get(api_url);
+    	        $('#myModal').modal('hide')
+    	    }
+    	    
+            function roku_command(cmd) {
+                var api_url = 'http://' + roku_ip_address + ":" + roku_port + '/keypress/' + cmd;
+                $.post(api_url);
+            }
+            
+            $(document).keydown(function(e) {
+		if (roku_hotkeys_enabled == true) {
+			switch(e.which) {
+			    case 37:
+			    roku_command('Left');
+			    break;
+
+			    case 38:
+			    roku_command('Up');
+			    break;
+
+			    case 39:
+			    roku_command('Right');
+			    break;
+
+			    case 40:
+			    roku_command('Down');
+			    break;
+			    
+			    case 13:
+			    roku_command('Select');
+			    break;
+			    
+			    case 66:
+			    roku_command('Back');
+			    break;
+			    
+			    case 32:
+			    roku_command('Play');
+			    break;
+			    
+			    case 72:
+			    roku_command('Home');
+			    break;
+
+			    default: return; 
+                        }
+                        e.preventDefault(); 
+		    }
+            });
+            
+            $(document).ready(function () {
+                get_apps();
+            });
+            
+            function get_apps() {
+                var api_url = 'http://localhost:8081/apps';
+                $.ajax({
+                    url: api_url,
+                    type: 'get',
+                    data:{'url':'http://' + roku_ip_address + ':' + roku_port},
+                    dataType:"TEXT",
+                    success: appParser
+                });
+            }
+            
+            function appParser(data) {
+                $(data).find("app").each(function () {
+                    app_img = 'http://'+roku_ip_address+':8060/query/icon/'+$(this).attr('id');
+                    $("#roku-apps").append('<a class="app" href="javascript:roku_app_launch(' + $(this).attr('id') + ')"><img src="' + app_img + '" /></a>');
+                });
+	    }
+
+            function disable_hotkeys() {
+                roku_hotkeys_enabled = false;
+	    }
+
+            function enable_hotkeys() {
+                roku_hotkeys_enabled = true;
+	    }
+    	</script>
+    	
+    	<style type="text/css">
+    	    .remote {
+    	        width: 200px;
+    	        margin: 20px auto;
+    	        border: 1px solid #333;
+    	        background-color: black;
+    	        padding: 20px 20px 20px 15px;
+    	        -webkit-border-radius: 5px;
+                -moz-border-radius: 5px;
+                border-radius: 5px;
+    	    }
+    	    
+    	    .purple_btn {
+    	        background-color: #bbaaee;
+    	        border: 1px solid #bbaaee;
+    	    }
+    	    
+    	    .app img {
+    	        width:175px;
+    	        border-radius: 5px;
+    	        margin:7px;
+    	    }
+    	    
+    	    .app {
+    	    	
+    	    }
+
+    	</style>
+    </head>
+    <body>
+        <div class="remote container">
+        
+          <div class="col-xs-12 row">
+            <div class="col-xs-4">
+                <button class="btn btn-default" onclick="javascript:roku_command('Back')"><i class="glyphicon glyphicon-arrow-left"></i></button>
+            </div>
+            <div class="col-xs-4">&nbsp;</div>
+            <div class="col-xs-4">
+                <button class="btn btn-default" onclick="javascript:roku_command('Home')"><i class="glyphicon glyphicon-home"></i></button>
+            </div>
+          </div>
+          <div class="col-xs-12 row" style="margin-top:10px">
+            <div class="col-xs-4">&nbsp;</div>
+            <div class="col-xs-4">
+                <button class="btn btn-default purple_btn" onclick="javascript:roku_command('Up')"><i class="glyphicon glyphicon-chevron-up"></i></button>
+            </div>
+            <div class="col-xs-4">&nbsp;</div>
+          </div>
+          <div class="col-xs-12 row">
+            <div class="col-xs-4">
+                <button class="btn btn-default purple_btn" onclick="javascript:roku_command('Left')"><i class="glyphicon glyphicon-chevron-left"></i></button>
+            </div>
+            <div class="col-xs-4">&nbsp;</div>
+            <div class="col-xs-4">
+                <button class="btn btn-default purple_btn" onclick="javascript:roku_command('Right')"><i class="glyphicon glyphicon-chevron-right"></i></button>
+            </div>
+          </div>
+          <div class="col-xs-12 row">
+            <div class="col-xs-4">&nbsp;</div>
+            <div class="col-xs-4">
+                <button class="btn btn-default purple_btn" onclick="javascript:roku_command('Down')"><i class="glyphicon glyphicon-chevron-down"></i></button>
+            </div>
+            <div class="col-xs-4">&nbsp;</div>
+          </div>
+          <div class="col-xs-12 row" style="margin-top:10px">
+            <div class="col-xs-4">
+                <button class="btn btn-default" onclick="javascript:roku_command('InstantReplay')"><i class="glyphicon glyphicon-repeat"></i></button>
+            </div>
+            <div class="col-xs-4">
+                <button class="btn btn-default" onclick="javascript:roku_command('Select')"><span style="font-size:10px">OK</span></button>
+            </div>
+            <div class="col-xs-4">
+                <button class="btn btn-default" onclick="javascript:roku_command('Info')"><i class="glyphicon glyphicon-asterisk"></i></button>
+            </div>
+          </div>
+          <div class="col-xs-12 row" style="margin-top:10px">
+            <div class="col-xs-4">
+                <button class="btn btn-default" onclick="javascript:roku_command('Rev')"><i class="glyphicon glyphicon-backward"></i></button>
+            </div>
+            <div class="col-xs-4">
+                <button class="btn btn-default" onclick="javascript:roku_command('Play')"><i class="glyphicon glyphicon-play"></i></button>
+            </div>
+            <div class="col-xs-4">
+                <button class="btn btn-default" onclick="javascript:roku_command('Fwd')"><i class="glyphicon glyphicon-forward"></i></button>
+            </div>
+          </div>
+          <div class="col-xs-12 row" style="margin-top:50px">
+            &nbsp;
+          </div>
+          <div class="col-xs-12 row" style="margin-top:10px">
+            <div class="col-xs-4">
+		<button class="btn btn-default purple_btn" data-toggle="modal" data-target="#myKeyboardModal" onclick="javascript:disable_hotkeys()"><i class="glyphicon glyphicon-text-size"></i></button>
+	    </div>
+	    <div class="col-xs-4">&nbsp;</div>
+            <div class="col-xs-4">
+                <button class="btn btn-default purple_btn" data-toggle="modal" data-target="#myAppModal"><span style="font-size:10px">APPS</span></button>
+            </div>
+          </div>
+        </div
+
+	<!-- Keyboard Modal -->
+        <div class="modal fade" id="myKeyboardModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="$('#keyboard').val('');enable_hotkeys()"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel">Roku - Typing</h4>
+                    </div>
+                    <div class="modal-body" id="roku-keyboard">
+			<input type="text" name="keyboard" id="keyboard" class="form-control" onkeyup="javascript:roku_keyboard(event)" />
+                        <button type="button" class="btn btn-default" onclick="javascript:roku_backspace()">Backspace</button>
+                        <button type="button" class="btn btn-default" onclick="javascript:roku_play()">Enter</button>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" onclick="$('#keyboard').val('');enable_hotkeys()">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- App Modal -->
+        <div class="modal fade" id="myAppModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel">Your Roku Apps</h4>
+                    </div>
+                    <div class="modal-body" id="roku-apps">
+        
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>

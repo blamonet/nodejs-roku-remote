@@ -1,0 +1,14 @@
+{
+  "name": "blamonet-roku-remote",
+  "version": "0.0.1",
+  "dependencies": {
+    "express": "^4.14.1",
+    "http-post": "^0.1.1",
+    "http-proxy": "^1.8.1",
+    "request-json": "^0.6.1"
+  },
+  "main": "remote.js",
+  "scripts": {
+    "start": "node remote.js"
+  }
+}
